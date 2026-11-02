@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nano Banana Studio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8D%8C%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0e0f13; --panel:#171920; --panel2:#1f222b; --line:#2b2f3a;
+  --text:#e9ebf1; --muted:#8b91a1; --accent:#ffd23f; --accent2:#ff4fd8;
+  --ok:#3ddc97; --err:#ff5c6c; --r:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1400px;margin:0 auto;padding:16px;display:grid;grid-template-columns:420px 1fr;gap:16px}
+@media(max-width:900px){.wrap{grid-template-columns:1fr}}
+header{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:20px;margin:0;letter-spacing:.3px}
+header h1 span{color:var(--accent)}
+.keybox{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.keybox input{width:260px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.panel h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:0 0 8px;font-weight:600}
+.sec{margin-bottom:16px}
+input,select,textarea{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;width:100%}
+textarea{min-height:170px;resize:vertical;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button.primary{background:var(--accent);color:#111;border:none;font-weight:700;width:100%;padding:13px;font-size:15px}
+button.primary:disabled{opacity:.5;cursor:wait}
+button.small{padding:5px 9px;font-size:12px}
+.models{display:grid;gap:6px}
+.model{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--panel2)}
+.model:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.model input{width:auto;margin-top:3px;accent-color:var(--accent)}
+.model b{display:block}
+.model small{color:var(--muted)}
+.tag{font-size:10px;padding:1px 6px;border-radius:20px;background:#2a2d38;color:var(--muted);margin-left:6px;vertical-align:middle}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.row label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+.drop{border:1.5px dashed var(--line);border-radius:10px;padding:14px;text-align:center;color:var(--muted);cursor:pointer;transition:.15s}
+.drop.over{border-color:var(--accent);color:var(--text);background:#ffd23f0d}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px;margin-top:8px}
+.thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:3px;right:3px;padding:0 6px;font-size:12px;line-height:18px;background:#000a;border:none;border-radius:6px}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.status{margin-top:10px;font-size:13px;min-height:20px}
+.status.err{color:var(--err)} .status.ok{color:var(--ok)}
+.results{display:flex;flex-direction:column;gap:16px}
+.batch{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.batch-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:10px}
+.batch-head .p{color:var(--text);flex:1 1 100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.card .img{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(#1b1d24 0 25%,#16181e 0 50%) 0 0/20px 20px}
+.card img{max-width:100%;max-height:100%;display:block;cursor:zoom-in}
+.card .acts{display:flex;gap:6px;padding:8px;flex-wrap:wrap}
+.card .note{padding:0 8px 8px;font-size:12px;color:var(--muted);white-space:pre-wrap;max-height:90px;overflow:auto}
+.card.error .img{background:#2a1518;color:var(--err);padding:14px;font-size:12px;text-align:left;white-space:pre-wrap;overflow:auto}
+.spinner{width:34px;height:34px;border:3px solid #ffffff22;border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{color:var(--muted);text-align:center;padding:60px 20px;border:1px dashed var(--line);border-radius:var(--r)}
+.lightbox{position:fixed;inset:0;background:#000e;display:none;align-items:center;justify-content:center;z-index:50;cursor:zoom-out}
+.lightbox img{max-width:96vw;max-height:96vh}
+.lightbox.on{display:flex}
+details summary{cursor:pointer;color:var(--muted);font-size:12px}
+.inline{display:flex;gap:6px;align-items:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🍌 Nano Banana <span>Studio</span></h1>
+    <div class="keybox">
+      <input id="apiKey" type="password" placeholder="Google AI Studio API key" autocomplete="off">
+      <button class="small" id="toggleKey">👁</button>
+      <button class="small" id="saveKey">Зберегти</button>
+      <button class="small" id="clearKey" title="Видалити ключ з браузера">✕</button>
+    </div>
+  </header>
+
+  <!-- LEFT -->
+  <div class="panel">
+    <div class="sec">
+      <h2>Модель</h2>
+      <div class="models" id="models"></div>
+      <details style="margin-top:8px">
+        <summary>Свій ID моделі (якщо Google перейменує)</summary>
+        <input id="customModel" placeholder="напр. gemini-3-pro-image-preview" style="margin-top:6px">
+      </details>
+    </div>
+
+    <div class="sec">
+      <h2>Промт</h2>
+      <textarea id="prompt" placeholder="Опишіть зображення або вставте JSON-промт…&#10;&#10;Ctrl+Enter — генерувати"></textarea>
+    </div>
+
+    <div class="sec">
+      <h2>Референси <span id="refCount" class="tag">0</span></h2>
+      <div class="drop" id="drop">Перетягніть фото сюди, клікніть або Ctrl+V</div>
+      <input type="file" id="file" accept="image/*" multiple hidden>
+      <div class="thumbs" id="thumbs"></div>
+      <div class="hint" id="refHint"></div>
+    </div>
+
+    <div class="sec">
+      <h2>Параметри</h2>
+      <div class="row">
+        <div><label>Пропорції</label>
+          <select id="aspect">
+            <option value="">Авто</option>
+            <option>1:1</option><option>4:5</option><option>5:4</option>
+            <option>3:4</option><option>4:3</option><option>2:3</option><option>3:2</option>
+            <option>9:16</option><option>16:9</option><option>21:9</option>
+          </select></div>
+        <div><label>Розмір</label>
+          <select id="size"></select></div>
+        <div><label>Варіантів</label>
+          <select id="count"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+      </div>
+      <div class="row" style="margin-top:8px;grid-template-columns:1fr 1fr">
+        <div id="thinkWrap"><label>Обдумування</label>
+          <select id="thinking"><option value="minimal">Мінімальне (швидко)</option><option value="high">Високе (якість)</option></select></div>
+        <div><label>Формат файлу</label>
+          <select id="mime"><option value="image/png">PNG</option><option value="image/jpeg">JPEG</option></select></div>
+      </div>
+    </div>
+
+    <button class="primary" id="go">Генерувати</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="results" id="results">
+    <div class="empty" id="empty">Тут з'являться результати.<br>Кнопка «→ Референс» під картинкою додає її у референси для наступної правки.</div>
+  </div>
+</div>
+<div class="lightbox" id="lb"><img id="lbImg" alt=""></div>
+
+<script>
+/* ---------- Config ---------- */
+const MODELS = [
+  { id:'gemini-3-pro-image', name:'Nano Banana Pro', tag:'якість',
+    desc:'Найкраща якість, текст, бренд, складні сцени. Повільніша і дорожча.',
+    sizes:['1K','2K','4K'], thinking:false, maxRefs:14 },
+  { id:'gemini-3.1-flash-image', name:'Nano Banana 2', tag:'баланс',
+    desc:'Швидка, до 4K, добре тримає кілька референсів.',
+    sizes:['512','1K','2K','4K'], thinking:true, maxRefs:14 },
+  { id:'gemini-3.1-flash-lite-image', name:'Nano Banana 2 Lite', tag:'найшвидша',
+    desc:'Найшвидша і найдешевша, тільки 1K. Слабше з референсами.',
+    sizes:['1K'], thinking:true, maxRefs:14 },
+];
+const API = 'https://generativelanguage.googleapis.com/v1beta';
+const LS = { key:'nbs_key', model:'nbs_model', prompt:'nbs_prompt', aspect:'nbs_aspect', size:'nbs_size' };
+
+/* ---------- Helpers ---------- */
+const $ = id => document.getElementById(id);
+const ls = {
+  get(k){ try{return localStorage.getItem(k)}catch(e){return null} },
+  set(k,v){ try{localStorage.setItem(k,v)}catch(e){} },
+  del(k){ try{localStorage.removeItem(k)}catch(e){} }
+};
+let refs = []; // {data(base64), mime, url}
+let batchNo = 0;
+
+/* ---------- Models UI ---------- */
+function renderModels(){
+  const saved = ls.get(LS.model) || MODELS[0].id;
+  $('models').innerHTML = MODELS.map(m => `
+    <label class="model">
+      <input type="radio" name="model" value="${m.id}" ${m.id===saved?'checked':''}>
+      <div><b>${m.name}<span class="tag">${m.tag}</span></b><small>${m.desc}</small></div>
+    </label>`).join('');
+  document.querySelectorAll('input[name=model]').forEach(r => r.addEventListener('change', () => {
+    ls.set(LS.model, r.value); syncModelOptions();
+  }));
+  syncModelOptions();
+}
+function currentModel(){
+  const id = document.querySelector('input[name=model]:checked')?.value || MODELS[0].id;
+  return MODELS.find(m => m.id === id);
+}
+function syncModelOptions(){
+  const m = currentModel();
+  const prev = $('size').value || ls.get(LS.size) || '1K';
+  $('size').innerHTML = m.sizes.map(s => `<option value="${s}">${s==='512'?'512px':s}</option>`).join('');
+  $('size').value = m.sizes.includes(prev) ? prev : (m.sizes.includes('1K') ? '1K' : m.sizes[0]);
+  $('thinkWrap').style.visibility = m.thinking ? 'visible' : 'hidden';
+  updateRefHint();
+}
+
+/* ---------- API key ---------- */
+$('apiKey').value = ls.get(LS.key) || '';
+$('saveKey').onclick = () => { ls.set(LS.key, $('apiKey').value.trim()); setStatus('Ключ збережено в цьому браузері', 'ok'); };
+$('clearKey').onclick = () => { ls.del(LS.key); $('apiKey').value=''; setStatus('Ключ видалено'); };
+$('toggleKey').onclick = () => { $('apiKey').type = $('apiKey').type==='password' ? 'text' : 'password'; };
+
+/* ---------- Prompt persistence ---------- */
+$('prompt').value = ls.get(LS.prompt) || '';
+$('prompt').addEventListener('input', () => ls.set(LS.prompt, $('prompt').value));
+$('aspect').value = ls.get(LS.aspect) || '';
+$('aspect').onchange = () => ls.set(LS.aspect, $('aspect').value);
+$('size').onchange = () => ls.set(LS.size, $('size').value);
+
+/* ---------- References ---------- */
+function updateRefHint(){
+  $('refCount').textContent = refs.length;
+  const m = currentModel();
+  $('refHint').textContent = refs.length
+    ? `Модель приймає до ${m.maxRefs} фото. Порядок важливий — можна посилатися в промті: «фото 1», «фото 2».`
+    : 'Без фото — генерація з нуля. З фото — редагування / комбінування.';
+}
+function renderThumbs(){
+  $('thumbs').innerHTML = refs.map((r,i) => `
+    <div class="thumb" title="Фото ${i+1}"><img src="${r.url}"><button data-i="${i}">✕</button></div>`).join('');
+  $('thumbs').querySelectorAll('button').forEach(b => b.onclick = () => {
+    refs.splice(+b.dataset.i, 1); renderThumbs();
+  });
+  updateRefHint();
+}
+function blobToDataURL(blob){
+  return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+}
+// Shrinks very large photos so the request stays small and fast
+async function prepImage(file){
+  const url = await blobToDataURL(file);
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+  const MAX = 2048;
+  const big = Math.max(img.width, img.height) > MAX || file.size > 4*1024*1024;
+  const okType = ['image/png','image/jpeg','image/webp'].includes(file.type);
+  if(!big && okType) return { url, mime:file.type, data:url.split(',')[1] };
+  const k = Math.min(1, MAX / Math.max(img.width, img.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.width*k); c.height = Math.round(img.height*k);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  const keepPng = file.type === 'image/png';
+  const out = c.toDataURL(keepPng ? 'image/png' : 'image/jpeg', 0.92);
+  return { url:out, mime: keepPng ? 'image/png' : 'image/jpeg', data:out.split(',')[1] };
+}
+async function addFiles(files){
+  const list = [...files].filter(f => f.type.startsWith('image/'));
+  for(const f of list){
+    if(refs.length >= 14){ setStatus('Максимум 14 референсів', 'err'); break; }
+    try{ refs.push(await prepImage(f)); }catch(e){ setStatus('Не вдалося прочитати '+f.name, 'err'); }
+  }
+  renderThumbs();
+}
+const drop = $('drop');
+drop.onclick = () => $('file').click();
+$('file').onchange = e => { addFiles(e.target.files); e.target.value=''; };
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+document.addEventListener('paste', e => {
+  const imgs = [...(e.clipboardData?.items||[])].filter(i => i.type.startsWith('image/')).map(i => i.getAsFile());
+  if(imgs.length){ e.preventDefault(); addFiles(imgs); }
+});
+
+/* ---------- Status ---------- */
+function setStatus(t, cls=''){ $('status').textContent = t; $('status').className = 'status ' + cls; }
+
+/* ---------- Requests ---------- */
+// Primary: Interactions API (current docs). Fallback: classic generateContent.
+async function callInteractions(key, modelId, prompt, opts){
+  const input = [{ type:'text', text:prompt }, ...refs.map(r => ({ type:'image', mime_type:r.mime, data:r.data }))];
+  const rf = { type:'image', mime_type:opts.mime };
+  if(opts.aspect) rf.aspect_ratio = opts.aspect;
+  if(opts.size) rf.image_size = opts.size;
+  const body = { model:modelId, input, response_format:rf };
+  if(opts.thinking) body.generation_config = { thinking_level: opts.thinking };
+  const r = await fetch(`${API}/interactions`, {
+    method:'POST', headers:{ 'Content-Type':'application/json', 'x-goog-api-key':key }, body:JSON.stringify(body)
+  });
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok){ const e = new Error(j?.error?.message || `HTTP ${r.status}`); e.status = r.status; throw e; }
+  return parseInteraction(j);
+}
+function parseInteraction(j){
+  const images = [], texts = [];
+  for(const step of (j.steps || [])){
+    if(step.type !== 'model_output') continue;
+    for(const b of (step.content || [])){
+      if(b.type === 'image' && b.data) images.push({ data:b.data, mime:b.mime_type || 'image/png' });
+      else if(b.type === 'text' && b.text) texts.push(b.text);
+    }
+  }
+  if(!images.length && j.output_image?.data) images.push({ data:j.output_image.data, mime:j.output_image.mime_type || 'image/png' });
+  if(!texts.length && j.output_text) texts.push(j.output_text);
+  return { images: images.slice(-1), text: texts.join('\n') };
+}
+async function callGenerateContent(key, modelId, prompt, opts){
+  const parts = [{ text:prompt }, ...refs.map(r => ({ inlineData:{ mimeType:r.mime, data:r.data } }))];
+  const imageConfig = {};
+  if(opts.aspect) imageConfig.aspectRatio = opts.aspect;
+  if(opts.size) imageConfig.imageSize = opts.size;
+  const body = { contents:[{ role:'user', parts }], generationConfig:{ responseModalities:['TEXT','IMAGE'], imageConfig } };
+  const r = await fetch(`${API}/models/${encodeURIComponent(modelId)}:generateContent`, {
+    method:'POST', headers:{ 'Content-Type':'application/json', 'x-goog-api-key':key }, body:JSON.stringify(body)
+  });
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok){ const e = new Error(j?.error?.message || `HTTP ${r.status}`); e.status = r.status; throw e; }
+  const images = [], texts = [];
+  for(const c of (j.candidates || [])){
+    for(const p of (c.content?.parts || [])){
+      if(p.thought) continue;
+      const d = p.inlineData || p.inline_data;
+      if(d?.data) images.push({ data:d.data, mime:d.mimeType || d.mime_type || 'image/png' });
+      else if(p.text) texts.push(p.text);
+    }
+    if(!images.length && c.finishReason && c.finishReason !== 'STOP') texts.push('finishReason: ' + c.finishReason);
+  }
+  if(j.promptFeedback?.blockReason) texts.push('Заблоковано: ' + j.promptFeedback.blockReason);
+  return { images: images.slice(-1), text: texts.join('\n') };
+}
+async function generateOne(key, modelId, prompt, opts){
+  try{
+    return await callInteractions(key, modelId, prompt, opts);
+  }catch(e){
+    // 404/400 on the new endpoint → try the classic one before giving up
+    if(e.status === 404 || e.status === 400 || e.status === undefined){
+      try{ return await callGenerateContent(key, modelId, prompt, opts); }
+      catch(e2){ throw new Error(e.message + (e2.message && e2.message!==e.message ? '\n(резервний запит: ' + e2.message + ')' : '')); }
+    }
+    throw e;
+  }
+}
+
+/* ---------- Results ---------- */
+function extOf(mime){ return mime.includes('jpeg') ? 'jpg' : mime.split('/')[1] || 'png'; }
+function ts(){ const d=new Date(), p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`; }
+function makeBatch(prompt, modelName, opts, n){
+  $('empty')?.remove();
+  batchNo++;
+  const el = document.createElement('div');
+  el.className = 'batch';
+  el.innerHTML = `
+    <div class="batch-head">
+      <span class="p" title=""></span>
+      <span>#${batchNo}</span><span>${modelName}</span>
+      <span>${opts.aspect||'авто'} · ${opts.size||'—'}</span>
+      <span>${refs.length} реф.</span>
+      <span class="timer">0.0 с</span>
+      <button class="small reuse">↺ Промт</button>
+    </div>
+    <div class="grid"></div>`;
+  el.querySelector('.p').textContent = prompt;
+  el.querySelector('.p').title = prompt;
+  el.querySelector('.reuse').onclick = () => { $('prompt').value = prompt; ls.set(LS.prompt, prompt); $('prompt').focus(); };
+  const cards = [];
+  for(let i=0;i<n;i++){
+    const c = document.createElement('div');
+    c.className = 'card';
+    c.innerHTML = `<div class="img"><div class="spinner"></div></div>`;
+    el.querySelector('.grid').appendChild(c); cards.push(c);
+  }
+  $('results').prepend(el);
+  return { el, cards };
+}
+function fillCard(card, res, idx){
+  if(!res.images.length){
+    card.classList.add('error');
+    card.querySelector('.img').textContent = 'Модель не повернула зображення.\n' + (res.text || 'Спробуйте переформулювати промт.');
+    return;
+  }
+  const im = res.images[0];
+  const src = `data:${im.mime};base64,${im.data}`;
+  const name = `nanobanana_${ts()}_${idx+1}.${extOf(im.mime)}`;
+  card.querySelector('.img').innerHTML = `<img alt="">`;
+  const img = card.querySelector('img'); img.src = src;
+  img.onclick = () => { $('lbImg').src = src; $('lb').classList.add('on'); };
+  const acts = document.createElement('div'); acts.className = 'acts';
+  acts.innerHTML = `<a class="dl" download="${name}" href="${src}"><button class="small">⬇ Завантажити</button></a>
+                    <button class="small toref">→ Референс</button>
+                    <button class="small copy">⧉ Копіювати</button>`;
+  acts.querySelector('.toref').onclick = () => {
+    if(refs.length >= 14) return setStatus('Максимум 14 референсів', 'err');
+    refs.push({ url:src, mime:im.mime, data:im.data }); renderThumbs(); setStatus('Додано в референси', 'ok');
+  };
+  acts.querySelector('.copy').onclick = async () => {
+    try{
+      const blob = await (await fetch(src)).blob();
+      const png = blob.type === 'image/png' ? blob : await toPng(src);
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
+      setStatus('Скопійовано в буфер', 'ok');
+    }catch(e){ setStatus('Браузер не дозволив копіювання — використайте завантаження', 'err'); }
+  };
+  card.appendChild(acts);
+  if(res.text){ const n = document.createElement('div'); n.className='note'; n.textContent = res.text; card.appendChild(n); }
+}
+function toPng(src){
+  return new Promise(res => { const i = new Image(); i.onload = () => { const c=document.createElement('canvas'); c.width=i.width; c.height=i.height; c.getContext('2d').drawImage(i,0,0); c.toBlob(res,'image/png'); }; i.src = src; });
+}
+function failCard(card, err){
+  card.classList.add('error');
+  card.querySelector('.img').textContent = 'Помилка: ' + err.message;
+}
+$('lb').onclick = () => $('lb').classList.remove('on');
+
+/* ---------- Generate ---------- */
+async function run(){
+  const key = $('apiKey').value.trim();
+  const prompt = $('prompt').value.trim();
+  if(!key) return setStatus('Вставте API-ключ зверху', 'err');
+  if(!prompt) return setStatus('Напишіть промт', 'err');
+  const m = currentModel();
+  const modelId = $('customModel').value.trim() || m.id;
+  if(refs.length > m.maxRefs) return setStatus(`Забагато референсів для ${m.name} (макс. ${m.maxRefs})`, 'err');
+  const n = +$('count').value;
+  const opts = { aspect:$('aspect').value, size:$('size').value, mime:$('mime').value, thinking: m.thinking ? $('thinking').value : null };
+  if(!ls.get(LS.key)) ls.set(LS.key, key);
+
+  const { el, cards } = makeBatch(prompt, modelId === m.id ? m.name : modelId, opts, n);
+  const t0 = performance.now();
+  const timer = setInterval(() => el.querySelector('.timer').textContent = ((performance.now()-t0)/1000).toFixed(1)+' с', 100);
+  $('go').disabled = true; setStatus(`Генерую ${n} шт…`);
+
+  let ok = 0, lastErr = '';
+  await Promise.all(cards.map((card, i) =>
+    generateOne(key, modelId, prompt, opts)
+      .then(res => { fillCard(card, res, i); if(res.images.length) ok++; })
+      .catch(err => { failCard(card, err); lastErr = err.message; })
+  ));
+  clearInterval(timer);
+  const sec = ((performance.now()-t0)/1000).toFixed(1);
+  el.querySelector('.timer').textContent = sec + ' с';
+  $('go').disabled = false;
+  if(ok) setStatus(`Готово: ${ok}/${n} за ${sec} с`, 'ok');
+  else setStatus('Не вийшло: ' + lastErr.split('\n')[0], 'err');
+}
+$('go').onclick = run;
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !$('go').disabled) run();
+  if(e.key === 'Escape') $('lb').classList.remove('on');
+});
+
+renderModels();
+renderThumbs();
+</script>
+</body>
+</html>
